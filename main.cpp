@@ -1,50 +1,55 @@
 #include <iostream>
 #include <math.h>
 #include <string.h>
+#include <cmath>
+#include "AdamsBashford.h"
+#include "AdamsBashfordUnlimited.h"
+#include "AdamsBashfordSinusoidal.h"
 
-int main() {
+using namespace std;
 
-    FILE *fptr;
-    float popPredator, popPrey, popPreyMax, Y[2][3], h=1, alpha, alphaZero, gama, beta, delta;
-    int tempo;
+int main(int argc, char** argv) {
 
-    //Abre o arquivo onde salva a variaçao ne populaçao geral
-    fptr = fopen("/home/joaopaulo/CLionProjects/ReiLeao/population.txt", "w");
-    if (fptr == NULL) {
-        printf("Arquivo nao existe! \n");
-        return 0;
+
+    int type = 9;
+
+    while (type != 0 && type != 1) {
+        cout << "Que metodo de ambiente aos herbivoros você deseja utilizar?\n"
+         << "Digite 0 para ilimitado\n"
+         << "Digite 1 para senoidal\n";
+        cin >> type;
     }
 
+    AdamsBashford* adamsBashford;
+
+    if (type == 0) {
+        adamsBashford = new AdamsBashfordUnlimited();
+    } else {
+        adamsBashford = new AdamsBashfordSinusoidal();
+    }
+
+    //Forçando a variação de tempo em 1 para os valores não ficarem muito distorcidos
+    adamsBashford->timeVariation = 1;
 
 
-    //Inicializaçao RK2
-    Y[0][1] = (Y[0][0] + h*(Y[0][0] + (h/2)*((alpha*Y[0][0]) - (beta*Y[0][0]*Y[1][0]))));
-    Y[1][1] = (Y[1][0] + h*(Y[1][0] + (h/2)*(((-1)*Y[1][0]) + (delta*Y[0][1]*Y[1][0]))));
+    cout << "Quantos meses devem ser simulados? Ex.: 2400\n";
+    cin >> adamsBashford->totalOfMonths;
+    cout << "Qual o intervalo entre cada iteração (milissegundos) Ex.: 100\n";
+    cin >> adamsBashford->cycleInterval;
+
+    cout << "Qual a população inicial de presas? Ex.: 5000\n";
+    cin >> adamsBashford->preyInitialPopulation;
+    cout << "Qual a população inicial de predadores? Ex.: 100\n";
+    cin >> adamsBashford->predatorInitialPopulation;
 
 
+    cout << "Qual o quoeficiente de crescimento das presas (α) (Ex.: 0.01)\n";
+    cin >> adamsBashford->alpha;
+    cout << "Qual o quoeficiente de crescimento dos predadores (∆). (Ex.: 0.00001)\n";
+    cin >> adamsBashford->delta;
 
-    //20 anos -> 240 meses
-    for(tempo = 0; tempo <= 240; tempo++){
+    adamsBashford->calc();
 
-    // diferentes criterios para definição de alpha
-    //alpha = ((1.5+sin(tempo))*alphaZero);
-    //alpha = (alpha*(popPreyMax - Y[0][0]));  ???? não seria zero?
-
-    beta = popPrey/alpha;
-    gama = popPredator*gama;
-
-
-    Y[0][2] = Y[0][0] + h*( 3*((alpha*Y[0][1]) - (beta*Y[0][1]*Y[1][1])) - (alpha*Y[0][0]) - (beta*Y[0][0]*Y[1][0])  );
-    Y[1][2] = Y[1][0] + h*( 3*((-1)*gama*Y[1][1] + (delta*Y[0][1]*Y[1][1]))   -  ((-1)*gama*Y[1][0] + (delta*Y[0][0]*Y[1][0]))  );
-
-    //imprimindo no arquivo
-    fprintf(fptr, "%d;%f;%f\n", tempo,Y[0][0],Y[1][0]);
-
-    //Avançando: k-1 <- k e k <- k+1
-    Y[0][0] = Y[0][1];
-    Y[1][0] = Y[1][1];
-    Y[0][1] = Y[0][2];
-    Y[1][2] = Y[1][2];
-     }
+    cout << "Todos as informações foram plotadas!";
 
 }
